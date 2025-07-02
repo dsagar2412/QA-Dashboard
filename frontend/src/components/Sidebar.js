@@ -3,6 +3,7 @@ import React from 'react';
 const Sidebar = ({ activeItem, onItemClick, isCollapsed }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard Overview', icon: '/dashboard.png' },
+    { id: 'master-dashboard', label: 'Master Dashboard', icon: '/dashboard.png' },
     { id: 'custom-dashboard', label: 'Custom Dashboard', icon: '/dashboard.png' },
     { id: 'projects', label: 'Projects', icon: '/Projects.png' },
     { id: 'testcases', label: 'Test Cases', icon: '/Test Cases.png' },

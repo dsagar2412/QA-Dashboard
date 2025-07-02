@@ -15,3 +15,8 @@ export const getJiraIssues = () =>
       console.log("Raw JIRA API response:", res.data); // Debug log
       return res.data.data;
     });
+
+export const getDashboardSummary = (projectId = null) => {
+  const url = projectId ? `${API_BASE}/dashboard/summary?projectId=${projectId}` : `${API_BASE}/dashboard/summary`;
+  return axios.get(url).then(res => res.data);
+};

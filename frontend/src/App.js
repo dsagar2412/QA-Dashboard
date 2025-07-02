@@ -8,6 +8,7 @@ import ProjectInfo from './components/ProjectInfo';
 import TestCasesView from './components/TestCasesView';
 import IssuesView from './components/IssuesView';
 import CustomDashboard from './components/CustomDashboard';
+import MasterDashboard from './components/MasterDashboard';
 import './App.css';
 
 function App() {
@@ -29,7 +30,7 @@ function App() {
         console.error("Error fetching JIRA issues:", error);
       });
   }, []);
-
+  
   const handleNavItemClick = (itemId) => {
     setActiveNavItem(itemId);
   };
@@ -39,6 +40,15 @@ function App() {
   };
 
   const calculateSummary = () => {
+    if (!testCases || !Array.isArray(testCases)) {
+      return {
+        total: 0,
+        passed: 0,
+        failed: 0,
+        blocked: 0,
+      };
+    }
+    
     const statusCounts = testCases.reduce((acc, testCase) => {
       const status = testCase.status?.toLowerCase() || 'unknown';
       acc[status] = (acc[status] || 0) + 1;
@@ -90,6 +100,8 @@ function App() {
             {activeNavItem === 'testcases' ? 'Test Cases Management' :
               activeNavItem === 'issues' ? 'Issues Management' :
               activeNavItem === 'custom-dashboard' ? 'Custom Dashboard' :
+              activeNavItem === 'master-dashboard' ? 'Master Dashboard' :
+              activeNavItem === 'projects' ? 'Projects Overview' :
                 'Dashboard Overview'}
           </h1>
         </header>
@@ -105,6 +117,10 @@ function App() {
               jiraIssues={jiraIssues} 
               summary={calculatedSummary} 
             />
+          ) : activeNavItem === 'master-dashboard' ? (
+            <MasterDashboard />
+          ) : activeNavItem === 'projects' ? (
+            <MasterDashboard />
           ) : (
             <>
               <main className="dashboard-main">
