@@ -5,6 +5,9 @@ public class JiraIssue {
     private String summary;
     private String status;
     private String priority;
+    private String assignee;
+    private String projectId;
+    private String projectName;
 
     public JiraIssue(String id, String summary, String status, String priority) {
         this.id = id;
@@ -29,6 +32,18 @@ public class JiraIssue {
         return priority;
     }
 
+    public String getAssignee() {
+        return assignee;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
     public void setId(String id) {
         this.id = id;
     }
@@ -43,5 +58,17 @@ public class JiraIssue {
 
     public void setPriority(String priority) {
         this.priority = priority;
+    }
+
+    public void setAssignee(String assignee) {
+        this.assignee = assignee;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 }

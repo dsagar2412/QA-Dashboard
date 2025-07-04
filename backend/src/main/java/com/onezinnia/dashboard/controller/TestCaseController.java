@@ -28,10 +28,18 @@ public class TestCaseController {
     }
 
     @GetMapping
-    public ApiResponse<List<TestCase>> getTestCases(String status) {
-        List<TestCase> result = (status != null && !status.isEmpty())
-                ? testCaseService.getTestCasesByStatus(status)
-                : testCaseService.getAllTestCases();
+    public ApiResponse<List<TestCase>> getTestCases(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String projectId) {
+        List<TestCase> result;
+        
+        if (projectId != null && !projectId.isEmpty()) {
+            result = testCaseService.getTestCasesByProject(projectId, status);
+        } else {
+            result = (status != null && !status.isEmpty())
+                    ? testCaseService.getTestCasesByStatus(status)
+                    : testCaseService.getAllTestCases();
+        }
 
         return new ApiResponse<>(
                 "success",
@@ -61,8 +69,11 @@ public class TestCaseController {
 
 
     @GetMapping("/summary")
-    public ApiResponse<Map<String, Long>> getTestCaseSummary() {
-        Map<String, Long> summary = testCaseService.getTestCaseSummary();
+    public ApiResponse<Map<String, Long>> getTestCaseSummary(
+            @RequestParam(required = false) String projectId) {
+        Map<String, Long> summary = (projectId != null && !projectId.isEmpty())
+                ? testCaseService.getTestCaseSummaryByProject(projectId)
+                : testCaseService.getTestCaseSummary();
         return new ApiResponse<>(
                 "success",
                 "Test case summary retrieved successfully",

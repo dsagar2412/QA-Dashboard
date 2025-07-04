@@ -198,6 +198,17 @@ const MasterDashboard = () => {
     setSelectedProject(projectId);
   };
 
+  // Handle custom dashboard click for specific project
+  const handleCustomDashboardClick = (project, event) => {
+    event.stopPropagation(); // Prevent triggering the project card click
+    // Navigate to custom dashboard with project context
+    window.location.href = `#custom-dashboard-${project.projectId}`;
+    // You can also use a callback prop to communicate with parent component
+    if (window.onProjectCustomDashboard) {
+      window.onProjectCustomDashboard(project);
+    }
+  };
+
   // Handle back to master dashboard
   const handleBackClick = () => {
     setSelectedProject(null);
@@ -444,6 +455,13 @@ const MasterDashboard = () => {
                     <div className="last-updated">
                       Last updated: {formatDate(project.updatedAt)}
                     </div>
+                    <button
+                      className="custom-dashboard-btn"
+                      onClick={(e) => handleCustomDashboardClick(project, e)}
+                      title="Open Custom Dashboard for this project"
+                    >
+                      🎛️ Custom Dashboard
+                    </button>
                   </div>
                 </div>
               );

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const ComponentSelector = ({ onSelect, onClose, testCases, jiraIssues, summary }) => {
+const ComponentSelector = ({ onSelect, onClose, testCases, jiraIssues, summary, selectedProject }) => {
   const [selectedCategory, setSelectedCategory] = useState('overview');
 
   const widgetCategories = {
@@ -162,7 +162,14 @@ const ComponentSelector = ({ onSelect, onClose, testCases, jiraIssues, summary }
     <div className="component-selector-overlay">
       <div className="component-selector-modal">
         <div className="modal-header">
-          <h3>Add New Widget</h3>
+          <div className="modal-title">
+            <h3>Add New Widget</h3>
+            {selectedProject && (
+              <div className="modal-subtitle">
+                for {selectedProject.projectName}
+              </div>
+            )}
+          </div>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
 

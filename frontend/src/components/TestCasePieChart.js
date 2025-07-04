@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
-const TestCasePieChart = React.memo(({ testCases }) => {
+const TestCasePieChart = React.memo(({ testCases, widgetSize }) => {
   // Memoize expensive calculations
   const { manualTestCases, automatedTestCases } = useMemo(() => ({
     manualTestCases: testCases.filter(tc => tc.automationType?.toLowerCase() === 'manual'),
@@ -59,65 +59,120 @@ const TestCasePieChart = React.memo(({ testCases }) => {
   const manualSuccessRate = manualTotal > 0 ? Math.round((manualStatusCounts.passed / manualTotal) * 100) : 0;
   const automatedSuccessRate = automatedTotal > 0 ? Math.round((automatedStatusCounts.passed / automatedTotal) * 100) : 0;
 
-  const renderPieChart = (data, outerData, title, total, successRate) => (
-    <div className="chart-container">
-      <div className="chart-header">
-        <h3 className="chart-title">{title} ({total})</h3>
-        <div style={{ fontSize: '0.75rem', color: '#4a5568' }}>
-          {successRate}% Success
+  // Calculate responsive dimensions based on widget size
+  const getChartDimensions = () => {
+    if (!widgetSize) {
+      return { width: 200, height: 200, fontSize: '0.75rem' };
+    }
+    
+    const { width, height } = widgetSize;
+    
+    // Calculate chart size based on available space
+    const availableWidth = width - 40; // Account for padding
+    const availableHeight = height - 120; // Account for header and legend
+    
+    // Determine chart size - can be smaller or larger than default
+    let chartWidth, chartHeight, fontSize;
+    
+    if (availableWidth < 300 || availableHeight < 200) {
+      // Small widget
+      chartWidth = Math.min(120, availableWidth);
+      chartHeight = Math.min(120, availableHeight);
+      fontSize = '0.7rem';
+    } else if (availableWidth < 500 || availableHeight < 300) {
+      // Medium widget
+      chartWidth = Math.min(160, availableWidth);
+      chartHeight = Math.min(160, availableHeight);
+      fontSize = '0.75rem';
+    } else if (availableWidth < 800 || availableHeight < 500) {
+      // Large widget
+      chartWidth = Math.min(250, availableWidth);
+      chartHeight = Math.min(250, availableHeight);
+      fontSize = '0.8rem';
+    } else {
+      // Extra large widget
+      chartWidth = Math.min(350, availableWidth);
+      chartHeight = Math.min(350, availableHeight);
+      fontSize = '0.9rem';
+    }
+    
+    return { width: chartWidth, height: chartHeight, fontSize };
+  };
+
+  const { width: chartWidth, height: chartHeight, fontSize } = getChartDimensions();
+
+  const renderPieChart = (data, outerData, title, total, successRate) => {
+    // Calculate responsive radii based on chart size
+    const outerRadius = chartWidth * 0.375; // 75% of half width
+    const innerRadius = chartWidth * 0.325; // 65% of half width
+    const innerInnerRadius = chartWidth * 0.175; // 35% of half width
+    
+    return (
+      <div className="chart-container">
+        <div className="chart-header">
+          <h3 className="chart-title" style={{ 
+            fontSize: fontSize === '0.7rem' ? '0.9rem' : 
+                     fontSize === '0.75rem' ? '1rem' : 
+                     fontSize === '0.8rem' ? '1.1rem' : '1.2rem' 
+          }}>
+            {title} ({total})
+          </h3>
+          <div style={{ fontSize: fontSize, color: '#4a5568' }}>
+            {successRate}% Success
+          </div>
         </div>
-      </div>
-      
-      <div className="chart-wrapper">
-        <ResponsiveContainer width={200} height={200}>
-          <PieChart>
-            {/* Outer decorative ring */}
-            <Pie
-              data={outerData}
-              cx="50%"
-              cy="50%"
-              innerRadius={65}
-              outerRadius={75}
-              paddingAngle={1}
-              dataKey="value"
-            >
-              {outerData.map((entry, index) => (
-                <Cell key={`outer-cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            
-            {/* Main inner ring */}
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={35}
-              outerRadius={65}
-              paddingAngle={2}
-              dataKey="value"
-            >
-              {data.map((entry, index) => (
-                <Cell key={`inner-cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
         
-        <div className="chart-legend">
-          {data.map((entry, index) => (
-            <div key={index} className="legend-item">
-              <div 
-                className="legend-color" 
-                style={{ backgroundColor: entry.color }}
-              ></div>
-              <span className="legend-label">{entry.name}</span>
-              <span className="legend-value">{entry.value}</span>
-            </div>
-          ))}
+        <div className="chart-wrapper">
+          <ResponsiveContainer width={chartWidth} height={chartHeight}>
+            <PieChart>
+              {/* Outer decorative ring */}
+              <Pie
+                data={outerData}
+                cx="50%"
+                cy="50%"
+                innerRadius={innerRadius}
+                outerRadius={outerRadius}
+                paddingAngle={1}
+                dataKey="value"
+              >
+                {outerData.map((entry, index) => (
+                  <Cell key={`outer-cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              
+              {/* Main inner ring */}
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={innerInnerRadius}
+                outerRadius={innerRadius}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`inner-cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          
+          <div className="chart-legend" style={{ fontSize: fontSize }}>
+            {data.map((entry, index) => (
+              <div key={index} className="legend-item">
+                <div 
+                  className="legend-color" 
+                  style={{ backgroundColor: entry.color }}
+                ></div>
+                <span className="legend-label">{entry.name}</span>
+                <span className="legend-value">{entry.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="pie-charts-container">

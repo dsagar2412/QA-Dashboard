@@ -15,8 +15,9 @@ function App() {
   const [testCases, setTestCases] = useState([]);
   const [summary, setSummary] = useState({});
   const [jiraIssues, setJiraIssues] = useState([]);
-  const [activeNavItem, setActiveNavItem] = useState('dashboard');
+  const [activeNavItem, setActiveNavItem] = useState('master-dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
 
   useEffect(() => {
     getTestCases().then(setTestCases).catch(console.error);
@@ -29,10 +30,29 @@ function App() {
       .catch(error => {
         console.error("Error fetching JIRA issues:", error);
       });
+    
+    // Set up global callback for project custom dashboard
+    window.onProjectCustomDashboard = handleProjectCustomDashboard;
+    
+    // Cleanup function
+    return () => {
+      delete window.onProjectCustomDashboard;
+    };
   }, []);
   
   const handleNavItemClick = (itemId) => {
     setActiveNavItem(itemId);
+    setSelectedProject(null); // Clear selected project when navigating via sidebar
+  };
+
+  const handleProjectCustomDashboard = (project) => {
+    setSelectedProject(project);
+    setActiveNavItem('custom-dashboard');
+  };
+
+  const handleBackFromCustomDashboard = () => {
+    setSelectedProject(null);
+    setActiveNavItem('master-dashboard');
   };
 
   const toggleSidebar = () => {
@@ -76,13 +96,18 @@ function App() {
           <img
             src="/zinnia-logo.png"
             alt="Zinnia"
-            className="logo-image"
+            className="logo-image clickable-logo"
+            onClick={() => window.location.reload()}
             onError={(e) => {
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'inline';
             }}
           />
-          <span style={{ display: 'none', fontSize: '1.3rem', fontWeight: 'bold', color: '#2d3748' }}>
+          <span 
+            style={{ display: 'none', fontSize: '1.3rem', fontWeight: 'bold', color: '#2d3748' }}
+            className="clickable-logo"
+            onClick={() => window.location.reload()}
+          >
             Zinnia
           </span>
         </div>
@@ -99,7 +124,8 @@ function App() {
           <h1>
             {activeNavItem === 'testcases' ? 'Test Cases Management' :
               activeNavItem === 'issues' ? 'Issues Management' :
-              activeNavItem === 'custom-dashboard' ? 'Custom Dashboard' :
+              activeNavItem === 'custom-dashboard' ? 
+                (selectedProject ? `Custom Dashboard - ${selectedProject.projectName}` : 'Custom Dashboard') :
               activeNavItem === 'master-dashboard' ? 'Master Dashboard' :
               activeNavItem === 'projects' ? 'Projects Overview' :
                 'Dashboard Overview'}
@@ -115,7 +141,9 @@ function App() {
             <CustomDashboard 
               testCases={testCases} 
               jiraIssues={jiraIssues} 
-              summary={calculatedSummary} 
+              summary={calculatedSummary}
+              selectedProject={selectedProject}
+              onBack={handleBackFromCustomDashboard}
             />
           ) : activeNavItem === 'master-dashboard' ? (
             <MasterDashboard />
