@@ -1,4 +1,5 @@
 package com.onezinnia.dashboard.controller;
+
 import com.onezinnia.dashboard.model.ApiResponse;
 import com.onezinnia.dashboard.model.JiraIssue;
 import com.onezinnia.dashboard.service.JiraService;
@@ -15,21 +16,21 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/jira")
-public class JiraMockController {
+public class JiraController {
 
     private final JiraService jiraService;
 
     @Autowired
-    public JiraMockController(JiraService jiraService) {
+    public JiraController(JiraService jiraService) {
         this.jiraService = jiraService;
     }
 
     @GetMapping("/issues")
-    public ApiResponse<List<JiraIssue>> getMockIssues(
+    public ApiResponse<List<JiraIssue>> getIssues(
             @RequestParam(required = false) String projectId) {
         List<JiraIssue> issues = (projectId != null && !projectId.isEmpty())
-                ? jiraService.getMockIssuesByProject(projectId)
-                : jiraService.getAllMockIssues();
+                ? jiraService.getIssuesByProject(projectId)
+                : jiraService.getAllIssues();
 
         return new ApiResponse<>(
                 "success",
@@ -37,9 +38,13 @@ public class JiraMockController {
                 issues
         );
     }
+
     @GetMapping("/summary")
-    public ApiResponse<Map<String, Long>> getStatusSummary() {
-        Map<String, Long> summary = jiraService.getStatusSummary();
+    public ApiResponse<Map<String, Long>> getStatusSummary(
+            @RequestParam(required = false) String projectId) {
+        Map<String, Long> summary = (projectId != null && !projectId.isEmpty())
+                ? jiraService.getStatusSummaryByProject(projectId)
+                : jiraService.getStatusSummary();
 
         return new ApiResponse<>(
                 "success",
@@ -47,5 +52,4 @@ public class JiraMockController {
                 summary
         );
     }
-}
-
+} 

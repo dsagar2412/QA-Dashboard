@@ -1,6 +1,6 @@
 package com.onezinnia.dashboard.controller;
 import com.onezinnia.dashboard.model.ApiResponse;
-import com.onezinnia.dashboard.model.TestCase;
+import com.onezinnia.dashboard.model.TestCaseMongoModel;
 import com.onezinnia.dashboard.service.TestCaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -28,13 +28,18 @@ public class TestCaseController {
     }
 
     @GetMapping
-    public ApiResponse<List<TestCase>> getTestCases(
+    public ApiResponse<List<TestCaseMongoModel>> getTestCases(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String projectId) {
-        List<TestCase> result;
+        List<TestCaseMongoModel> result;
         
         if (projectId != null && !projectId.isEmpty()) {
-            result = testCaseService.getTestCasesByProject(projectId, status);
+            try {
+                int projectIdInt = Integer.parseInt(projectId);
+                result = testCaseService.getTestCasesByProjectAndStatus(projectIdInt, status);
+            } catch (NumberFormatException e) {
+                result = List.of(); // Return empty list if projectId is not a valid integer
+            }
         } else {
             result = (status != null && !status.isEmpty())
                     ? testCaseService.getTestCasesByStatus(status)
@@ -48,32 +53,44 @@ public class TestCaseController {
         );
     }
 
-    @GetMapping("/sorted")
-    public ApiResponse<List<TestCase>> getSortedTestCases(@RequestParam(defaultValue = "asc") String order) {
-        List<TestCase> all = testCaseService.getAllTestCases();
-
-        all.sort((a, b) -> {
-            if ("desc".equalsIgnoreCase(order)) {
-                return b.getExecutedAt().compareTo(a.getExecutedAt());
-            } else {
-                return a.getExecutedAt().compareTo(b.getExecutedAt());
-            }
-        });
-
+    @GetMapping("/automated")
+    public ApiResponse<List<TestCaseMongoModel>> getAutomatedTestCases() {
+        List<TestCaseMongoModel> automatedTestCases = testCaseService.getAutomatedTestCases();
+        
         return new ApiResponse<>(
                 "success",
-                "Test cases sorted by execution time",
-                all
+                "Automated test cases retrieved successfully",
+                automatedTestCases
         );
     }
 
+    @GetMapping("/manual")
+    public ApiResponse<List<TestCaseMongoModel>> getManualTestCases() {
+        List<TestCaseMongoModel> manualTestCases = testCaseService.getManualTestCases();
+        
+        return new ApiResponse<>(
+                "success",
+                "Manual test cases retrieved successfully",
+                manualTestCases
+        );
+    }
 
     @GetMapping("/summary")
     public ApiResponse<Map<String, Long>> getTestCaseSummary(
             @RequestParam(required = false) String projectId) {
-        Map<String, Long> summary = (projectId != null && !projectId.isEmpty())
-                ? testCaseService.getTestCaseSummaryByProject(projectId)
-                : testCaseService.getTestCaseSummary();
+        Map<String, Long> summary;
+        
+        if (projectId != null && !projectId.isEmpty()) {
+            try {
+                int projectIdInt = Integer.parseInt(projectId);
+                summary = testCaseService.getTestCaseSummaryByProject(projectIdInt);
+            } catch (NumberFormatException e) {
+                summary = Map.of(); // Return empty map if projectId is not a valid integer
+            }
+        } else {
+            summary = testCaseService.getTestCaseSummary();
+        }
+        
         return new ApiResponse<>(
                 "success",
                 "Test case summary retrieved successfully",
@@ -82,16 +99,13 @@ public class TestCaseController {
     }
 
     @GetMapping("/query")
-    public ApiResponse<List<TestCase>> filterTestCases(
+    public ApiResponse<List<TestCaseMongoModel>> filterTestCases(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String automationType,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
-        List<TestCase> filtered = testCaseService.filterTestCases(status, automationType, startDate, endDate);
+        List<TestCaseMongoModel> filtered = testCaseService.filterTestCases(status, automationType, startDate, endDate);
         return new ApiResponse<>("success", "Filtered test cases retrieved", filtered);
     }
-
-
-
 }

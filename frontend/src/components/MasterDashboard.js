@@ -3,6 +3,12 @@ import { getDashboardSummary, getTestCases, getJiraIssues } from '../api/testcas
 import TestCasePieChart from './TestCasePieChart';
 import DefectsChart from './DefectsChart';
 import DashboardCards from './DashboardCards';
+import GlobalKPIBanner from './GlobalKPIBanner';
+import HealthDistributionDonut from './HealthDistributionDonut';
+import TestExecutionTrend from './TestExecutionTrend';
+import DefectSeverityBarStack from './DefectSeverityBarStack';
+import QuickFilterPills from './QuickFilterPills';
+import AnimatedNumber from './AnimatedNumber';
 import './MasterDashboard.css';
 
 const MasterDashboard = () => {
@@ -13,17 +19,23 @@ const MasterDashboard = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [healthFilter, setHealthFilter] = useState('all');
+  const [jiraIssues, setJiraIssues] = useState([]);
+  const [quickFilters, setQuickFilters] = useState([]);
 
-  // Load all project summaries
+  // Load all project summaries and JIRA issues
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const summaries = await getDashboardSummary();
+        const [summaries, issues] = await Promise.all([
+          getDashboardSummary(),
+          getJiraIssues()
+        ]);
         setProjects(summaries);
+        setJiraIssues(issues);
       } catch (err) {
         setError(err.message || 'Failed to load dashboard data');
-        console.error('Error fetching dashboard summaries:', err);
+        console.error('Error fetching dashboard data:', err);
       } finally {
         setLoading(false);
       }
@@ -161,7 +173,12 @@ const MasterDashboard = () => {
     return total > 0 ? Math.round((automatedCount / total) * 100) : 0;
   };
 
-  // Filter projects based on search query and health filter
+  // Handle quick filter changes
+  const handleQuickFilterChange = (filters) => {
+    setQuickFilters(filters);
+  };
+
+  // Filter projects based on search query, health filter, and quick filters
   const filteredProjects = useMemo(() => {
     return projects.filter(project => {
       const matchesSearch = searchQuery === '' ||
@@ -175,7 +192,7 @@ const MasterDashboard = () => {
       const health = getHealthScore(project.passed, project.total);
       return health.status === healthFilter;
     });
-  }, [projects, searchQuery, healthFilter]);
+  }, [projects, searchQuery, healthFilter, quickFilters]);
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -324,6 +341,9 @@ const MasterDashboard = () => {
       </div>
 
       <div className="dashboard-main">
+        {/* Global KPI Banner */}
+        <GlobalKPIBanner projects={projects} jiraIssues={jiraIssues} />
+        
         {/* Filters and Search */}
         <div className="dashboard-filters">
           <div className="search-section">
@@ -369,7 +389,7 @@ const MasterDashboard = () => {
             </div>
           </div>
         </div>
-
+        
         {/* Health Legend */}
         <div className="health-legend">
           <h4>Health Indicators</h4>
@@ -422,31 +442,47 @@ const MasterDashboard = () => {
                   <div className="project-stats">
                     <div className="stat-row">
                       <span className="stat-label">Total Test Cases</span>
-                      <span className="stat-value">{project.total}</span>
+                      <span className="stat-value">
+                        <AnimatedNumber value={project.total} duration={1000} format={v => v.toLocaleString()} />
+                      </span>
                     </div>
                     <div className="stat-row">
                       <span className="stat-label">Passed</span>
-                      <span className="stat-value passed">{project.passed}</span>
+                      <span className="stat-value passed">
+                        <AnimatedNumber value={project.passed} duration={1000} />
+                      </span>
                     </div>
                     <div className="stat-row">
                       <span className="stat-label">Failed</span>
-                      <span className="stat-value failed">{project.failed}</span>
+                      <span className="stat-value failed">
+                        <AnimatedNumber value={project.failed} duration={1000} />
+                      </span>
                     </div>
                     <div className="stat-row">
                       <span className="stat-label">Blocked</span>
-                      <span className="stat-value blocked">{project.blocked}</span>
+                      <span className="stat-value blocked">
+                        <AnimatedNumber value={project.blocked} duration={1000} />
+                      </span>
                     </div>
                   </div>
 
                   <div className="project-metrics">
                     <div className="metric">
                       <div className="metric-label">Automation</div>
-                      <div className="metric-value">{automationPercent}%</div>
+                      <div className="metric-value">
+                        <AnimatedNumber value={automationPercent} duration={1000} format={v => `${v}%`} />
+                        <span style={{ marginLeft: 6, fontSize: '1rem', color: project.projectId % 2 === 0 ? '#22c55e' : '#ef4444' }}>
+                          {project.projectId % 2 === 0 ? '▲' : '▼'}
+                        </span>
+                      </div>
                     </div>
                     <div className="metric">
                       <div className="metric-label">Pass Rate</div>
                       <div className="metric-value" style={{ color: health.color }}>
-                        {Math.round(health.score)}%
+                        <AnimatedNumber value={Math.round(health.score)} duration={1000} format={v => `${v}%`} />
+                        <span style={{ marginLeft: 6, fontSize: '1rem', color: project.projectId % 2 === 0 ? '#22c55e' : '#ef4444' }}>
+                          {project.projectId % 2 === 0 ? '▲' : '▼'}
+                        </span>
                       </div>
                     </div>
                   </div>

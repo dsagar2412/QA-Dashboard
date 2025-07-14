@@ -5,17 +5,18 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.ArrayList;
 
 @Service
 public class MilestoneService {
 
     public List<Milestone> getAllMilestones() {
-        return List.of(
-                new Milestone("Phase 1 Complete", LocalDate.of(2025, 6, 15), "Completed"),
-                new Milestone("UAT Start", LocalDate.of(2025, 6, 22), "Upcoming"),
-                new Milestone("Final Release", LocalDate.of(2025, 7, 5), "Planned")
-        );
+        // TODO: Implement real milestone data integration
+        // This could be from a project management API, database, or configuration
+        // For now, return empty list until real data source is configured
+        return new ArrayList<>();
     }
+
     public List<Milestone> getSortedMilestones(String order) {
         List<Milestone> milestones = getAllMilestones();
 
@@ -27,6 +28,20 @@ public class MilestoneService {
                         return m1.getTargetDate().compareTo(m2.getTargetDate());
                     }
                 })
+                .toList();
+    }
+
+    public List<Milestone> getMilestonesByStatus(String status) {
+        return getAllMilestones().stream()
+                .filter(m -> m.getStatus().equalsIgnoreCase(status))
+                .toList();
+    }
+
+    public List<Milestone> getUpcomingMilestones() {
+        LocalDate today = LocalDate.now();
+        return getAllMilestones().stream()
+                .filter(m -> m.getTargetDate().isAfter(today))
+                .sorted((m1, m2) -> m1.getTargetDate().compareTo(m2.getTargetDate()))
                 .toList();
     }
 }

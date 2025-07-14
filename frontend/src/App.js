@@ -9,6 +9,7 @@ import TestCasesView from './components/TestCasesView';
 import IssuesView from './components/IssuesView';
 import CustomDashboard from './components/CustomDashboard';
 import MasterDashboard from './components/MasterDashboard';
+import DarkModeToggle from './components/DarkModeToggle';
 import './App.css';
 
 function App() {
@@ -18,6 +19,27 @@ function App() {
   const [activeNavItem, setActiveNavItem] = useState('master-dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Load dark mode preference from localStorage
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+    setIsDarkMode(savedDarkMode);
+  }, []);
+
+  // Apply dark mode to body class
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+    localStorage.setItem('darkMode', isDarkMode);
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
 
   useEffect(() => {
     getTestCases().then(setTestCases).catch(console.error);
@@ -110,6 +132,9 @@ function App() {
           >
             Zinnia
           </span>
+        </div>
+        <div className="top-bar-actions">
+          <DarkModeToggle isDarkMode={isDarkMode} onToggle={toggleDarkMode} />
         </div>
       </div>
 

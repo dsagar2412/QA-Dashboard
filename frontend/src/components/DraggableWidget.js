@@ -16,12 +16,18 @@ const DraggableWidget = ({
   const [isResizing, setIsResizing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  
+  // Debug showMenu state changes
+  React.useEffect(() => {
+    console.log('showMenu state changed to:', showMenu);
+  }, [showMenu]);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   // Close menu when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showMenu && !event.target.closest('.widget-controls')) {
+      if (showMenu && !event.target.closest('.widget-controls') && !event.target.closest('.widget-menu')) {
+        console.log('Clicking outside, closing menu');
         setShowMenu(false);
       }
     };
@@ -119,7 +125,9 @@ const DraggableWidget = ({
   const handleDelete = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('Delete button clicked for widget:', widget.id);
     if (window.confirm('Are you sure you want to delete this widget?')) {
+      console.log('Confirming deletion of widget:', widget.id);
       onDelete(widget.id);
       setShowMenu(false);
     }
@@ -212,21 +220,54 @@ const DraggableWidget = ({
     >
       <div className="widget-header" style={{ cursor: 'grab', userSelect: 'none' }}>
         <span className="widget-title">{widget.config.title}</span>
-        <div className="widget-controls">
+        <div className="widget-controls" style={{ position: 'relative' }}>
           <button 
             className="widget-menu-btn"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              console.log('Menu button clicked, current showMenu:', showMenu);
               setShowMenu(!showMenu);
             }}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', fontSize: '1.2rem', padding: '0.25rem' }}
           >
             ⋮
           </button>
           {showMenu && (
-            <div className="widget-menu">
-              <button onClick={handleDelete}>🗑️ Delete Widget</button>
+            <div 
+              className="widget-menu" 
+              style={{ 
+                position: 'absolute',
+                top: '100%',
+                right: '0',
+                background: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                zIndex: 1000,
+                minWidth: '120px',
+                overflow: 'hidden'
+              }}
+            >
+              <button 
+                onClick={handleDelete} 
+                style={{ 
+                  display: 'block',
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  background: 'none',
+                  border: 'none',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  color: '#ef4444',
+                  fontSize: '0.9rem',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#f8fafc'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+              >
+                🗑️ Delete Widget
+              </button>
             </div>
           )}
         </div>
